@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Pseudos IA Gratuit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>IAtoolbox 🛠️</h1>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="text_generator.html">Texte IA</a>
+            <a href="pseudo_generator.html">Pseudos</a>
+            <a href="text_rewriter.html">Reformulateur</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <div class="tool-container">
+        <h2>🎭 Générateur de Pseudos Aléatoires</h2>
+        <p>Entrez un mot clé ou un thème (ex: "ninja", "galaxie", "feu") pour obtenir des idées de pseudos.</p>
+        
+        <input type="text" id="keyword" placeholder="Entrez un mot clé (ex: 'dragon')" />
+        <button onclick="generatePseudo()">Générer des Pseudos</button>
+        
+        <h3>Résultat :</h3>
+        <div id="output">Les pseudos générés apparaîtront ici.</div>
+    </div>
+
+    <div class="ad-placeholder">
+        Espace Publicitaire 468x60
+    </div>
+
+    <script>
+    // ⚠️ REMPLACER VOTRE_CLE_API_HUGGING_FACE PAR VOTRE VRAIE CLÉ ! 
+    const HF_API_KEY = "VOTRE_CLE_API_HUGGING_FACE"; 
+    const HF_MODEL = "gpt2";
+
+    async function generatePseudo() {
+        const keyword = document.getElementById("keyword").value.trim();
+        const output = document.getElementById("output");
+        output.innerText = "Génération en cours... patientez svp.";
+
+        if (!keyword) {
+            output.innerText = "Veuillez entrer un mot clé.";
+            return;
+        }
+
+        // Prompt optimisé pour obtenir une liste de pseudos
+        const prompt = `Génère 5 pseudos courts, originaux et intelligents sur le thème de '${keyword}'. Liste-les séparément.`;
+
+        try {
+            const res = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
+                headers: { "Authorization": `Bearer ${HF_API_KEY}` },
+                method: "POST",
+                body: JSON.stringify({ 
+                    inputs: prompt,
+                    parameters: { 
+                        max_new_tokens: 50, // Assez pour 5 pseudos
+                        return_full_text: false 
+                    }
+                }),
+            });
+            
+            const result = await res.json();
+            
+            if (result && result[0] && result[0].generated_text) {
+                // Affiche uniquement le texte généré
+                output.innerText = result[0].generated_text.trim();
+            } else if (result.error) {
+                 output.innerText = `Erreur de l'API : ${result.error}`;
+            } else {
+                output.innerText = "Une erreur inconnue est survenue lors de la génération.";
+            }
+
+        } catch (e) {
+            console.error(e);
+            output.innerText = "Échec de la connexion à l'API. Vérifiez votre clé ou le statut du modèle.";
+        }
+    }
+    </script>
+</body>
+</html>
