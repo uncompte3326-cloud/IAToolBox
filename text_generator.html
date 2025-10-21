@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Texte IA Gratuit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>IAtoolbox 🛠️</h1>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="text_generator.html">Texte IA</a>
+            <a href="pseudo_generator.html">Pseudos</a>
+            <a href="text_rewriter.html">Reformulateur</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <div class="tool-container">
+        <h2>🧠 Générateur de Texte IA</h2>
+        <p>Écrivez une idée ou un début de phrase pour que l'IA le complète.</p>
+        
+        <textarea id="input" rows="5" placeholder="Exemple : Les trois meilleures façons de gagner de l'argent en ligne sont..."></textarea>
+        <button onclick="generateText()">Générer le Texte</button>
+        
+        <h3>Résultat :</h3>
+        <div id="output">Le texte généré apparaîtra ici.</div>
+    </div>
+
+    <div class="ad-placeholder">
+        Espace Publicitaire 300x250
+    </div>
+
+    <script>
+    // ⚠️ REMPLACER VOTRE_CLE_API_HUGGING_FACE PAR VOTRE VRAIE CLÉ ! 
+    const HF_API_KEY = "VOTRE_CLE_API_HUGGING_FACE"; 
+    const HF_MODEL = "gpt2"; // Vous pouvez essayer 'tiiuae/falcon-7b-instruct' pour de meilleurs résultats, mais potentiellement plus lent.
+
+    async function generateText() {
+        const input = document.getElementById("input").value;
+        const output = document.getElementById("output");
+        output.innerText = "Génération en cours... patientez svp.";
+
+        if (!input.trim()) {
+            output.innerText = "Veuillez entrer une idée ou un début de phrase.";
+            return;
+        }
+
+        try {
+            const res = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
+                headers: { "Authorization": `Bearer ${HF_API_KEY}` },
+                method: "POST",
+                body: JSON.stringify({ 
+                    inputs: input,
+                    parameters: { 
+                        max_new_tokens: 100, // Limite la taille de la réponse pour la gratuité
+                        return_full_text: false 
+                    }
+                }),
+            });
+            
+            const result = await res.json();
+            
+            if (result && result[0] && result[0].generated_text) {
+                // Affiche l'entrée + le texte généré (pour la complétion)
+                output.innerText = input + result[0].generated_text.trim();
+            } else if (result.error) {
+                 output.innerText = `Erreur de l'API : ${result.error}`;
+            } else {
+                output.innerText = "Une erreur inconnue est survenue lors de la génération.";
+            }
+
+        } catch (e) {
+            console.error(e);
+            output.innerText = "Échec de la connexion à l'API. Vérifiez votre clé ou le statut du modèle.";
+        }
+    }
+    </script>
+</body>
+</html>
