@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reformulateur de Texte IA Gratuit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>IAtoolbox 🛠️</h1>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="text_generator.html">Texte IA</a>
+            <a href="pseudo_generator.html">Pseudos</a>
+            <a href="text_rewriter.html">Reformulateur</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <div class="tool-container">
+        <h2>📝 Reformulateur de Texte</h2>
+        <p>Collez votre texte et l'IA le réécrira de manière unique, tout en conservant le sens original.</p>
+        
+        <textarea id="input" rows="8" placeholder="Collez le texte à reformuler ici..."></textarea>
+        <button onclick="rewriteText()">Reformuler</button>
+        
+        <h3>Résultat :</h3>
+        <div id="output">Le texte reformulé apparaîtra ici.</div>
+    </div>
+
+    <div class="ad-placeholder">
+        Espace Publicitaire 320x100
+    </div>
+
+    <script>
+    // ⚠️ REMPLACER VOTRE_CLE_API_HUGGING_FACE PAR VOTRE VRAIE CLÉ ! 
+    const HF_API_KEY = "VOTRE_CLE_API_HUGGING_FACE"; 
+    const HF_MODEL = "gpt2";
+
+    async function rewriteText() {
+        const inputText = document.getElementById("input").value.trim();
+        const output = document.getElementById("output");
+        output.innerText = "Reformulation en cours... patientez svp.";
+
+        if (!inputText) {
+            output.innerText = "Veuillez coller un texte à reformuler.";
+            return;
+        }
+
+        // Prompt pour la reformulation
+        const prompt = `Reformule le texte suivant de manière professionnelle et concise : "${inputText}"`;
+
+        try {
+            const res = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
+                headers: { "Authorization": `Bearer ${HF_API_KEY}` },
+                method: "POST",
+                body: JSON.stringify({ 
+                    inputs: prompt,
+                    parameters: { 
+                        max_new_tokens: 200, // Limite plus élevée pour le texte complet
+                        return_full_text: false 
+                    }
+                }),
+            });
+            
+            const result = await res.json();
+            
+            if (result && result[0] && result[0].generated_text) {
+                // Affiche uniquement le texte généré, qui est la reformulation
+                output.innerText = result[0].generated_text.trim();
+            } else if (result.error) {
+                 output.innerText = `Erreur de l'API : ${result.error}`;
+            } else {
+                output.innerText = "Une erreur inconnue est survenue lors de la reformulation.";
+            }
+
+        } catch (e) {
+            console.error(e);
+            output.innerText = "Échec de la connexion à l'API. Vérifiez votre clé ou le statut du modèle.";
+        }
+    }
+    </script>
+</body>
+</html>
