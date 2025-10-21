@@ -33,53 +33,51 @@
         Espace Publicitaire 320x100
     </div>
 
-    <script>
-    // ⚠️ REMPLACER VOTRE_CLE_API_HUGGING_FACE PAR VOTRE VRAIE CLÉ ! 
-    const HF_API_KEY = "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"; 
-    const HF_MODEL = "gpt2";
+   <script>
+// Le modèle n'est plus un secret, on peut le laisser ici.
+const HF_MODEL = "gpt2"; 
 
-    async function rewriteText() {
-        const inputText = document.getElementById("input").value.trim();
-        const output = document.getElementById("output");
-        output.innerText = "Reformulation en cours... patientez svp.";
+async function generateText() {
+    const input = document.getElementById("input").value;
+    const output = document.getElementById("output");
+    output.innerText = "Génération en cours via Netlify Function... Patientez.";
 
-        if (!inputText) {
-            output.innerText = "Veuillez coller un texte à reformuler.";
-            return;
-        }
-
-        // Prompt pour la reformulation
-        const prompt = `Reformule le texte suivant de manière professionnelle et concise : "${inputText}"`;
-
-        try {
-            const res = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
-                headers: { "Authorization": `Bearer ${HF_API_KEY}` },
-                method: "POST",
-                body: JSON.stringify({ 
-                    inputs: prompt,
-                    parameters: { 
-                        max_new_tokens: 200, // Limite plus élevée pour le texte complet
-                        return_full_text: false 
-                    }
-                }),
-            });
-            
-            const result = await res.json();
-            
-            if (result && result[0] && result[0].generated_text) {
-                // Affiche uniquement le texte généré, qui est la reformulation
-                output.innerText = result[0].generated_text.trim();
-            } else if (result.error) {
-                 output.innerText = `Erreur de l'API : ${result.error}`;
-            } else {
-                output.innerText = "Une erreur inconnue est survenue lors de la reformulation.";
-            }
-
-        } catch (e) {
-            console.error(e);
-            output.innerText = "Échec de la connexion à l'API. Vérifiez votre clé ou le statut du modèle.";
-        }
+    if (!input.trim()) {
+        output.innerText = "Veuillez entrer une idée ou un début de phrase.";
+        return;
     }
-    </script>
+
+    try {
+        // 🚨 NOUVEAU : On appelle la fonction Netlify à l'adresse /.netlify/functions/generate
+        const res = await fetch("/.netlify/functions/generate", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                model: HF_MODEL, 
+                input: input,
+                parameters: { 
+                    max_new_tokens: 100, // Limite la taille de la réponse
+                    return_full_text: false 
+                }
+            }),
+        });
+        
+        const result = await res.json();
+        
+        if (res.ok) {
+            // Affiche l'entrée + le texte généré (pour la complétion)
+            output.innerText = input + result[0].generated_text.trim();
+        } else if (result.error) {
+             output.innerText = `Erreur de l'API : ${result.error}. (Vérifiez la clé sur Netlify)`;
+        } else {
+            output.innerText = "Une erreur inconnue est survenue lors de la génération.";
+        }
+
+    } catch (e) {
+        console.error(e);
+        output.innerText = "Échec de la connexion. Le site est en ligne, le problème est dans la variable Netlify ou l'API.";
+    }
+}
+</script>
 </body>
 </html>
